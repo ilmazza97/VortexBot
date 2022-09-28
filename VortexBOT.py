@@ -5,7 +5,6 @@ import datetime
 import re  
 import prettytable as pt
 import pytz
-from os.path import exists
 import smtplib
 from email.header import Header
 from email.mime.text import MIMEText
