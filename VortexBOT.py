@@ -12,6 +12,9 @@ import requests
 import xmltodict
 import os
 from csv import writer,reader
+import threading
+from streamlit.runtime.scriptrunner import add_script_run_ctx
+
 #region Parameter
 CB_ACCOUNT='👤Account'
 CB_CHANNELS='🌀Channels'
@@ -452,9 +455,13 @@ try:
         password=config['password'],
         database=config['database'],
     )  
-    vortex_bot()
+    
 except Error as err:
     alert(updater,err)  
 except Exception as ap:
     print(f"ERROR - {ap}")
     exit()
+
+t = threading.Thread(target=vortex_bot)
+add_script_run_ctx(t) 
+t.start()
