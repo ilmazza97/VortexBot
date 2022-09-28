@@ -18,6 +18,7 @@ from telethon.tl.types import InputPeerUser
 import asyncio
 
 loop = asyncio.get_event_loop()
+asyncio.set_event_loop(loop)
 #region Parameter
 CB_ACCOUNT='👤Account'
 CB_CHANNELS='🌀Channels'
