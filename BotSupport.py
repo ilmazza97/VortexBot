@@ -30,6 +30,8 @@ CB_FT_SCREEN='📲Screen'
 #CB_SETTINGS='⚙️Settings'
 CB_SUBSCRIPTION='✍️Subcriptions'
 CB_DOWNLOAD='📥Download'
+CB_FOREX='💎Forex Guide'
+CB_BROKER='🏦Broker Guide'
 CB_UNSUBSCRIBE='👋Unsubscribe'
 CB_REACTIVATE = '😍Reactivate'
 FOREX='FOREX VIP ANALYSIS'
@@ -110,13 +112,8 @@ def help_command(update,context):
 def send_document(update, context):
     if login(update,context) is False: return
 
-    chatid=update.effective_chat.id
-    if not exists('guide.pdf'): 
-        alert(context,'Guide is missing!')
-        return
-
-    document = open('guide.pdf', 'rb')
-    context.bot.send_document(chatid, document)
+    document = open("Forex Guide - Vortex Project.pdf" if update.callback_query.data==CB_FOREX else "Broker Guide - Vortex Project.pdf", 'rb')
+    context.bot.send_document(update.effective_chat.id, document)
 #endregion
 
 #region StatusVip OK
@@ -232,6 +229,11 @@ def handle_callback_query(update, context):
     elif update.callback_query.data==CB_SUBSCRIPTION:
         status_command(update,context)
     elif update.callback_query.data==CB_DOWNLOAD:
+        keyboard=[]
+        keyboard.append([InlineKeyboardButton(text=CB_FOREX,callback_data=CB_FOREX)])     
+        keyboard.append([InlineKeyboardButton(text=CB_BROKER,callback_data=CB_BROKER)])      
+        context.bot.send_message(chat_id=chatid,text='📚Choose your free guide!',reply_markup=InlineKeyboardMarkup(keyboard))
+    elif update.callback_query.data==CB_FOREX or update.callback_query.data==CB_BROKER:
         send_document(update,context)
     elif update.callback_query.data==CB_CHANNELS:
         vip_command(update,context)
