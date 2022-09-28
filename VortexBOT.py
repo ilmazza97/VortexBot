@@ -12,12 +12,12 @@ import requests
 import xmltodict
 import os
 from csv import writer,reader
-import threading
-from streamlit.runtime.scriptrunner import add_script_run_ctx
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 from telethon.tl.types import InputPeerUser
+import asyncio
 
+loop = asyncio.get_event_loop()
 #region Parameter
 CB_ACCOUNT='👤Account'
 CB_CHANNELS='🌀Channels'
@@ -414,7 +414,7 @@ def error(update,context):
     alert(context,f"Update {update} caused error {context.error}")
 #endregion
 
-def vortex_bot():
+async def vortex_bot():
     try:    
         dp = updater.dispatcher
         commands = {
@@ -447,7 +447,7 @@ def vortex_bot():
         print(e)
         alert(dp,e)
 
-def support_bot():
+async def support_bot():
     @Bot.on(events.NewMessage(incoming=True))
     async def NewMessage(event):
         if not event.message.is_private: return
@@ -498,12 +498,8 @@ except Exception as ap:
     print(f"ERROR - {ap}")
     exit()
 
-t1 = threading.Thread(target=vortex_bot)
-t2 = threading.Thread(target=support_bot)
-add_script_run_ctx(t1) 
-add_script_run_ctx(t2) 
-t1.start()
-t2.start()
+loop.run_until_complete(vortex_bot())
+loop.run_until_complete(support_bot())
 
 print("Support Bot started.")
 Bot.run_until_disconnected()
