@@ -16,9 +16,10 @@ from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 from telethon.tl.types import InputPeerUser
 import asyncio
+import threading
 
-loop = asyncio.get_event_loop()
-asyncio.set_event_loop(loop)
+event_loop_a = asyncio.new_event_loop()
+event_loop_b = asyncio.new_event_loop()
 #region Parameter
 CB_ACCOUNT='👤Account'
 CB_CHANNELS='🌀Channels'
@@ -415,7 +416,9 @@ def error(update,context):
     alert(context,f"Update {update} caused error {context.error}")
 #endregion
 
-async def vortex_bot():
+def vortex_bot():
+    asyncio.set_event_loop(event_loop_a)
+    event_loop_a.run_forever()
     try:    
         dp = updater.dispatcher
         commands = {
@@ -448,7 +451,9 @@ async def vortex_bot():
         print(e)
         alert(dp,e)
 
-async def support_bot():
+def support_bot():
+    asyncio.set_event_loop(event_loop_b)
+    event_loop_b.run_forever()
     @Bot.on(events.NewMessage(incoming=True))
     async def NewMessage(event):
         if not event.message.is_private: return
@@ -499,8 +504,11 @@ except Exception as ap:
     print(f"ERROR - {ap}")
     exit()
 
-loop.run_until_complete(vortex_bot())
-loop.run_until_complete(support_bot())
-
+t1 = threading.Thread(target=vortex_bot)
+t2 = threading.Thread(target=support_bot)
+t1.start()
+t2.start()
+event_loop_a.call_soon_threadsafe(event_loop_a.stop)
+event_loop_b.call_soon_threadsafe(event_loop_b.stop)
 print("Support Bot started.")
 Bot.run_until_disconnected()
