@@ -12,14 +12,10 @@ import requests
 import xmltodict
 import os
 from csv import writer,reader
-from telethon import TelegramClient, events
-from telethon.sessions import StringSession
-from telethon.tl.types import InputPeerUser
 import asyncio
-import threading
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
 
-event_loop_a = asyncio.new_event_loop()
-event_loop_b = asyncio.new_event_loop()
 #region Parameter
 CB_ACCOUNT='👤Account'
 CB_CHANNELS='🌀Channels'
@@ -417,8 +413,6 @@ def error(update,context):
 #endregion
 
 def vortex_bot():
-    asyncio.set_event_loop(event_loop_a)
-    event_loop_a.run_forever()
     try:    
         dp = updater.dispatcher
         commands = {
@@ -451,40 +445,6 @@ def vortex_bot():
         print(e)
         alert(dp,e)
 
-def support_bot():
-    asyncio.set_event_loop(event_loop_b)
-    event_loop_b.run_forever()
-    @Bot.on(events.NewMessage(incoming=True))
-    async def NewMessage(event):
-        if not event.message.is_private: return
-        user_info = await event.get_input_chat()
-        cont=0
-
-        async for m in Bot.iter_messages(user_info):
-            if cont>=2:
-                return
-            cont+=1
-            
-        cippa = cippa = event.chat if event.chat is not None else await event.get_sender()
-        username = cippa.username if cippa.username!=None else cippa.first_name+' '+cippa.last_name
-    
-        await Bot.send_message(InputPeerUser(user_info.user_id, user_info.access_hash),  
-        message=("<b>👋WELCOME TO VORTEX SUPPORT!</b>\n\n"+
-                "Hi <b>{}</b>, I hope you’re well!\n"+
-                "This is an automatic message that gives you informations about how to buy a service and how to join our VIP channel!\n\n"+
-                "<b>🔥HOW TO JOIN THE VIP CHANNELS?</b>\n\n"+
-                "Once you buy one of our services, you will find out all the instructions you need to join on the respective channel or activating our telegram bot <b>@vort3xbot</b>\n\n"+
-                "👉Click <b>/start</b> to activate the bot, then click button: <b>🌀Channels</b>\n\n"+
-                "🤖Other Bot Features:\n"+
-                "    <i>•View services status\n"+
-                "    •Unsubscribe services\n"+
-                "    •Manage renewal method\n"+
-                "    •Download our forex guide\n"+
-                "    •Link to get <u>14-day free trial</u></i>\n\n"+
-                "🌐Visit our <b><a href='https://vortexproject.net'>website</a></b> and find all the information you need, you can also purchase one of our services\n\n"+
-                "👇Write us for more questions").format(username)
-        ,parse_mode=ParseMode.HTML)
-
 try:
     cont= open('conf.ini').read()
     config=eval(cont)
@@ -496,19 +456,9 @@ try:
         password=config['password'],
         database=config['database'],
     )  
-    Bot = TelegramClient(StringSession(config['session']), config['api_id'],config['api_hash'])
-    Bot.start()
+    vortex_bot()
 except Error as err:
     alert(updater,err)  
 except Exception as ap:
     print(f"ERROR - {ap}")
     exit()
-
-t1 = threading.Thread(target=vortex_bot)
-t2 = threading.Thread(target=support_bot)
-t1.start()
-t2.start()
-event_loop_a.call_soon_threadsafe(event_loop_a.stop)
-event_loop_b.call_soon_threadsafe(event_loop_b.stop)
-print("Support Bot started.")
-Bot.run_until_disconnected()
