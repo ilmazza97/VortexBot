@@ -12,6 +12,7 @@ import requests
 import xmltodict
 import os
 from csv import writer,reader
+import streamlit as st
 import asyncio
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
@@ -200,7 +201,7 @@ def handle_message(update,context):
                     button(update,context)
         else:
             context.bot.send_message(chat_id=chatid,text='⛔Invalid email format! Please insert correctly')
-    elif chatid==config['support_chat_id']:
+    elif chatid==st.secrets['support_chat_id']:
         mess = update.effective_message.text
         chat_id=update.message.reply_to_message.caption
         if mess.lower()=='ok':
@@ -279,7 +280,7 @@ def handle_photo(update, context):
     file.download(temp_file)
     #pio = pytesseract.image_to_string(temp_file)
 
-    context.bot.sendPhoto(chat_id=config['support_chat_id'], photo=open(temp_file, 'rb'), caption=str(chatid))
+    context.bot.sendPhoto(chat_id=st.secrets['support_chat_id'], photo=open(temp_file, 'rb'), caption=str(chatid))
     context.bot.sendPhoto(chat_id=chatid,text='📲Your proof of deposit will be checked by our support, you will be notified after validation')
     os.remove(temp_file)
 #endregion
@@ -334,7 +335,7 @@ def screen(update,context):
 def control_robo_account_number(update,context,account_number):
     chatid=update.effective_chat.id
 
-    r = requests.get('https://my.roboforex.com/api/partners?account_id={}&api_key={}'.format(config['robo_account_id'],config['robo_api_key']))
+    r = requests.get('https://my.roboforex.com/api/partners?account_id={}&api_key={}'.format(st.secrets['robo_account_id'],st.secrets['robo_api_key']))
     if r.status_code == 200:
         data = xmltodict.parse(r.content)['accounts']
         if data['@count']!='0':
@@ -364,8 +365,8 @@ def ft_choose_services(chatid,context):
 #region Other OK
 def login(update,context,sendmessage=True):
     chatid=update.effective_chat.id
-    dio = config['exclude_chat_id']
-    if str(chatid) in config['exclude_chat_id']: return True
+    dio = st.secrets['exclude_chat_id']
+    if str(chatid) in st.secrets['exclude_chat_id']: return True
     if update.effective_user.language_code=='it':
         context.bot.send_message(chat_id=update.effective_chat.id,text='❌Your country is not enabled')
         return False
@@ -393,20 +394,20 @@ def query(context,select_movies_query):
         alert(context,err)
 
 def send_email(subject,message,receiver_email):
-    sender_email = config['smtp_username']
+    sender_email = st.secrets['smtp_username']
 
     message = MIMEText(message)
     message['Subject'] = subject
     message['From'] = str(Header('🌀Vortex Project <{}}>'.format(sender_email)))
     message['To'] = receiver_email
 
-    server = smtplib.SMTP_SSL(config['smtp_host'], config['smtp_port'])
-    server.login(sender_email, config['smtp_password'])
+    server = smtplib.SMTP_SSL(st.secrets['smtp_host'], st.secrets['smtp_port'])
+    server.login(sender_email, st.secrets['smtp_password'])
     server.sendmail(sender_email, [receiver_email], message.as_string())
     server.quit()
 
 def alert(context,message):
-    context.bot.send_message(chat_id=config['error_chat_id'], text=message)
+    context.bot.send_message(chat_id=st.secrets['error_chat_id'], text=message)
 
 def error(update,context):
     alert(context,f"Update {update} caused error {context.error}")
@@ -446,15 +447,12 @@ def vortex_bot():
         alert(dp,e)
 
 try:
-    cont= open('conf.ini').read()
-    config=eval(cont)
-   
-    updater = Updater(config['api_token'],use_context=True)
+    updater = Updater(st.secrets['api_token'],use_context=True)
     db = connect(
-        host=config['host'],
-        user=config['user'],
-        password=config['password'],
-        database=config['database'],
+        host=st.secrets['host'],
+        user=st.secrets['user'],
+        password=st.secrets['password'],
+        database=st.secrets['database'],
     )  
     vortex_bot()
 except Error as err:
