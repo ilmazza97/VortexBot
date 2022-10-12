@@ -89,7 +89,7 @@ def vip_command(update,context):
         keyboard.append([InlineKeyboardButton(text=row[0],url=row[1])]) 
         if row[3] is not None:
             context.bot.unban_chat_member(chat_id=row[2], user_id=2126174292)#chatid)
-            query(context,'UPDATE kFf_TelegramBanMember SET unbandate=now() WHERE id={};'.format(row[3]))
+            query(context,'UPDATE {}TelegramBanMember SET unbandate=now() WHERE id={};'.format(st.secrets['webiste_px'],row[3]))
             db.commit()
 
     if not keyboard:
@@ -100,7 +100,7 @@ def vip_command(update,context):
 def link_command(update,context):
     chatid=update.effective_chat.id
     keyboard=[]
-    keyboard.append([InlineKeyboardButton(text='🏦Roboforex - Broker',url='https://my.roboforex.com/en/?a=aptv')])
+    keyboard.append([InlineKeyboardButton(text='🏦Roboforex - Broker',url='https://my.roboforex.com/en/?a={}'.format(st.secrets['robo_code']))])
    
     context.bot.send_message(chat_id=chatid,text='🤳Click to register!',reply_markup=InlineKeyboardMarkup(keyboard))
 
@@ -184,14 +184,14 @@ def handle_message(update,context):
     if not login(update,context,False):
         if(re.search('^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$',update.effective_message.text)): 
 
-            result = query(context,"select u.id,t.chatid from kFf_users u left join kFf_Telegram t on t.userid=u.id where u.user_email='{}';".format(update.effective_message.text))
+            result = query(context,"select u.id,t.chatid from {0}users u left join {0}Telegram t on t.userid=u.id where u.user_email='{1}';".format(st.secrets['webiste_px'],update.effective_message.text))
            
             for row in result:
                 if row[1] is not None:
                     context.bot.send_message(chat_id=chatid,text='♻️The email is already registered!! Use another.')
                     alert(context,"Alert, sospect client!! "+update.effective_chat.id+" ",+update.effective_message.text)
                 else:
-                    query(context,"INSERT INTO kFf_Telegram (userid, chatid,username,fullname,language,date) VALUES ({}, {},'{}','{}','{}','{}')".format(row[0], chatid,update.effective_user.name,update.effective_user.full_name,update.effective_user.language_code,datetime.datetime.now()))                  
+                    query(context,"INSERT INTO {}Telegram (userid, chatid,username,fullname,language,date) VALUES ({}, {},'{}','{}','{}','{}')".format(st.secrets['webiste_px'],row[0], chatid,update.effective_user.name,update.effective_user.full_name,update.effective_user.language_code,datetime.datetime.now()))                  
                     db.commit()
                     with open(os.path.realpath('Users.csv'), 'a+') as write_obj:
                         csv_writer = writer(write_obj)
@@ -211,7 +211,7 @@ def handle_message(update,context):
             context.bot.send_message(chat_id=chatid,text='Message sent to costumer✅',reply_to_message_id=update.message.reply_to_message.message_id)     
             context.bot.send_message(chat_id=chat_id,text='👉Message from support: '+mess)
     else:
-        result = query(context,"select id from kFf_FT_Account_Number where chatid={}".format(chatid))
+        result = query(context,"select id from {}FT_Account_Number where chatid={}".format(st.secrets['webiste_px'],chatid))
         if result: 
             context.bot.send_message(chat_id=chatid,text='🙅‍♂️You have already used the free trial.')
             return
@@ -269,7 +269,7 @@ def handle_callback_query(update, context):
 def handle_photo(update, context):
     chatid=update.effective_chat.id
     if login(update,context) is False: return
-    result = query(context,"select id from kFf_FT_Account_Number where chatid={}".format(chatid))
+    result = query(context,"select id from {}FT_Account_Number where chatid={}".format(st.secrets['webiste_px'],chatid))
     if result: 
         context.bot.send_message(chat_id=chatid,text='🙅‍♂️You have already used the free trial')
         return
@@ -291,7 +291,7 @@ def remove_expired(context):
 
     for row in result:
         context.bot.ban_chat_member(chat_id=row[1], user_id=row[0]) 
-        query(context,'INSERT INTO kFf_TelegramBanMember (chatid, linkid, bandate) VALUES ({}}, {}, now());'.format(row[0],row[2]))
+        query(context,'INSERT INTO {}TelegramBanMember (chatid, linkid, bandate) VALUES ({}}, {}, now());'.format(st.secrets['webiste_px'],row[0],row[2]))
         db.commit()
         context.bot.send_message(chat_id=row[1], text='🦿You have been removed from the channel: {}'.format(row[3])) 
 
@@ -328,7 +328,7 @@ def free_trial(update,context):
  
 def screen(update,context):
     chatid=update.effective_chat.id
-    result = query(context,"select id from kFf_FT_Account_Number where chatid={}".format(chatid))
+    result = query(context,"select id from {}FT_Account_Number where chatid={}".format(st.secrets['webiste_px'],chatid))
     if result: context.bot.send_message(chat_id=chatid,text='🙅‍♂️You have already used the free trial')
     else: context.bot.send_message(chat_id=chatid,text="✍️Enter your broker account number\n\nYou can get it on the broker's website or by checking your emails\n\nExample: 22007000")
 
@@ -344,7 +344,7 @@ def control_robo_account_number(update,context,account_number):
             for a in reversed(dica):
                 if str(account_number)==a['@id']:
                     find=True
-                    query(context,'INSERT INTO kFf_FT_Account_Number(AccountNumber,ChatId,Platform) VALUES({},{},{});'.format(account_number,chatid,1))
+                    query(context,'INSERT INTO {}FT_Account_Number(AccountNumber,ChatId,Platform) VALUES({},{},{});'.format(st.secrets['webiste_px'],account_number,chatid,1))
                     db.commit()    
                     if a['has_reached_deposit_threshold']=='1':
                         ft_choose_services(chatid,context)
@@ -365,7 +365,6 @@ def ft_choose_services(chatid,context):
 #region Other OK
 def login(update,context,sendmessage=True):
     chatid=update.effective_chat.id
-    dio = st.secrets['exclude_chat_id']
     if str(chatid) in st.secrets['exclude_chat_id']: return True
     if update.effective_user.language_code=='it':
         context.bot.send_message(chat_id=update.effective_chat.id,text='❌Your country is not enabled')
@@ -376,7 +375,7 @@ def login(update,context,sendmessage=True):
             if str(chatid) in row[0]:
                 return True
             
-    result = query(context,"select * from kFf_Telegram where chatid={};".format(chatid))
+    result = query(context,"select * from {}Telegram where chatid={};".format(st.secrets['webiste_px'],chatid))
     if not result:
         if sendmessage: context.bot.send_message(chat_id=chatid,text='📨Insert your Website email, to login!')
         return False
