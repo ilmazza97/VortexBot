@@ -19,7 +19,7 @@ asyncio.set_event_loop(loop)
 
 #region Parameter
 CB_ACCOUNT='👤Account'
-CB_CHANNELS='🌀Channels'
+CB_CHANNELS='🌀VIP Channels'
 CB_SERVICES='👨‍💻Services'
 CB_LINK='🌐Links'
 CB_FREE_TRIAL='🆓Free Trial'
@@ -39,7 +39,6 @@ updater=None
 
 #region Command OK
 def start_command(update,context):
-    if login(update,context) is False: return
     button(update,context)
 
 def button(update,context):
@@ -439,7 +438,7 @@ def vortex_bot():
         updater.start_polling()
 
         print("Vortex Bot started.")
-        #updater.idle()
+        updater.idle()
     except Error as e:
         print("Vortex Bot stopped.")
         print(e)
